@@ -1,0 +1,104 @@
+################################ 
+# -- DATA -- 
+################################
+dataset_original_dir: data/woodscape/
+
+dataset_dir: data/gen_woodscape_u_resized/
+train_file: data/gen_woodscape_u_resized/train.txt
+val_file: data/gen_woodscape_u_resized/val.txt
+test_file: data/gen_woodscape_u_resized/test.txt
+
+load_edges: False                     # Load Canny edge image
+loader: fast
+do_resize: True
+do_polar_mapping: True
+input_height: 1000                    # network input height choose from the above options
+input_width: 1000                     # network input width choose from the above options
+polar_width: 800
+output_directory: output/gen_woodscape_u_resized/ # Path to save images, model weights of training
+
+################################
+# -- MODEL CONFIGS --
+################################
+# choices:                      [fconv_adaptive_polar, fconv_gap_polar, 
+#                                 resize_gap_polar,
+#                                 resize_2step_polar,
+#                                 r_2step_super, r_gap_super,
+#                                 r_gap_super_var ]
+
+
+model_name: r_gap_super          # Writers will be written based on the model name
+description: 'without weights, with the addition of the Polar
+heatmap of SuperPoint as input feature. (4 Channels)'
+
+################################
+# -- NETWORK --
+################################
+network_fe_layers: 3              # Number of layers of the feature extractor
+network_fc_layers: 3              # Number of layers of the fully connected head
+
+#############################
+# -- TRAIN OPTIONS --
+#############################
+batch_size: 32                # training size of the model
+num_workers: 4                # Data loader workers
+epochs: 100                    # number of epochs
+learning_rate: 0.0001         # learning rate of the model
+scheduler_patience: 5
+scheduler_factor: 0.5
+scheduler_min_lr : 1e-5
+
+  ### -- Early stopping --
+do_early_stopping: True
+patience : 8                  # Number of epochs to wait for a better value
+min_delta : 1e-8              # Slight differences in validation loss are not considered significant
+starting_epoch : 10           # Epoch that defines the start of Early stopping.
+
+  ### -- LOSSES --
+reference_train_metric: variance_loss
+reference_val_metric: variance_loss_val
+loss_huber_delta: 0.3
+
+################
+# -- WEIGHTS --
+################
+train_va_weights: False
+test_va_weights: False
+
+#############################
+# -- LOGGING OPTIONS --
+#############################
+log_frequency: 1            # number of batches between each tensorboard log
+
+#############################
+# -- TEST OPTIONS --
+#############################
+# Path to save tensorboard events. If empty is the same as pretrained weights.
+test_suff: (wo-s)       # Appended at the end of the log_path
+test_save_rectified_imgs: False
+test_save_calibration_params: True
+test_visualize_batch_details: False
+test_metrics_df_path: 'benchmark/calibration/gen_woodscape_u_resized/metrics/evaluation.csv' # Path to the dataframe containing the metrics. If it does not exist it is created.
+test_img_out_path: 'benchmark/calibration/gen_woodscape_u_resized/images/'
+test_param_out_path: 'benchmark/calibration/gen_woodscape_u_resized/params/'
+test_img_out_height: 300
+test_img_out_width: 300
+
+###########################
+# -- PRE_TRAINED CONFIG --
+###########################
+# Pre-trained weights folder path of trained models to resume training and for testing
+pretrained_weights_kp: repos/SuperPointPretrainedNetwork/superpoint_v1.pth
+pretrained_weights: output/gen_woodscape_u_resized/r_gap_super_2023-02-08_11-29-00
+epoch_to_load:             # Number of the epoch to load if multiple options are availble. Empty is the last epoch
+models_to_load: ["net"]
+freeze_encoder: True
+optimizer:
+
+####################################################
+# -- CUDA --
+#############################
+device: 'cuda:0'             # choose cpu or cuda:0 device
+cuda_visible_devices: "0"    # To forcefully run the model on CPU set -1 else set string value to 0
+use_multiple_gpu: False      # Data parallelism
+########################################################################################################################

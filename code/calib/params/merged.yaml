@@ -1,0 +1,109 @@
+################################ 
+# -- TRAIN -- 
+################################
+dataset_original_dir: data/merged/
+
+dataset_dir: data/merged/
+train_file: data/merged/train.txt
+val_file: data/merged/val.txt
+test_file: data/merged/test.txt
+
+va_downsample: 25 
+load_edges: False                     # Load Canny edge image
+loader: 
+do_resize: False
+do_rotate: True
+do_flip: True
+grayscale: False
+do_polar_mapping: True
+no_gt : False 
+input_height: 400                    # network input height choose from the above options
+input_width: 400                     # network input width choose from the above options
+polar_width: 400
+output_directory: output/merged/ # Path to save images, model weights of training
+kernel_size: 3
+
+################################
+# -- MODEL CONFIGS --
+################################
+# choices:                      [fconv_adaptive_polar, fconv_gap_polar, 
+#                                 resize_gap_polar, 
+#                                 resize_2step_polar,
+#                                   fc_polar_v6   ]
+
+
+
+model_name: convnext_mix_feat_small          # Writers will be written based on the model name
+description: fully local, reduce on plateau
+
+
+################################
+# -- NETWORK --
+################################
+network_fe_layers: 3              # Number of layers of the feature extractor
+network_fc_layers: 2              # Number of layers of the fully connected head
+
+#############################
+# -- TRAIN OPTIONS --
+#############################
+batch_size: 60                # training size of the model
+num_workers: 2                # Data loader workers
+epochs: 50                    # number of epochs
+learning_rate: 1e-3         # learning rate of the model
+scheduler_patience: 5
+scheduler_factor: 0.5
+scheduler_min_lr : 1e-5
+
+  ### -- Early stopping --
+do_early_stopping: True
+patience : 10                  # Number of epochs to wait for a better value
+min_delta : 1e-7              # Slight differences in validation loss are not considered significant
+starting_epoch : 10           # Epoch that defines the start of Early stopping.
+
+  ### -- LOSSES --
+reference_train_metric: reprojection_loss
+reference_val_metric: reprojection_loss_val
+loss_huber_delta: 0.3
+
+################
+# -- WEIGHTS --
+################
+train_va_weights: False
+test_va_weights: False
+
+#############################
+# -- LOGGING OPTIONS --
+#############################
+log_frequency: 100            # number of batches between each tensorboard log
+
+#############################
+# -- TEST OPTIONS --
+#############################
+# Path to save tensorboard events. If empty is the same as pretrained weights.
+test_suff:
+test_save_rectified_imgs: False
+test_save_calibration_params: False
+test_visualize_batch_details: True
+test_metrics_df_path: #'benchmark/calibration/new_silda_2/metrics/evaluation.csv' # Path to the dataframe containing the metrics. If it does not exist it is created.
+test_img_out_path: 'benchmark/calibration/new_silda_2/images/'
+test_param_out_path: 'benchmark/calibration/new_silda_2/params/'
+test_img_out_height: 300
+test_img_out_width: 300
+
+###########################
+# -- PRE_TRAINED CONFIG --
+###########################
+# Pre-trained weights folder path of trained models to resume training and for testing
+pretrained_weights: # 'output/new_silda_2/convnext_mini3_2023-03-19_11-06-48'
+epoch_to_load:               # Number of the epoch to load if multiple options are availble. Empty is the last epoch
+models_to_load: ["net"]
+freeze_encoder: True
+optimizer:
+
+####################################################
+# -- CUDA --
+#############################
+device: 'cuda:0'             # choose cpu or cuda:0 device
+cuda_visible_devices: "0"    # To forcefully run the model on CPU set -1 else set string value to 0
+use_multiple_gpu: False      # Data parallelism
+########################################################################################################################

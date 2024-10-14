@@ -1,0 +1,110 @@
+################################ 
+# -- TRAIN -- 
+################################
+dataset_original_dir: data/SILDa/
+
+dataset_dir: data/new_silda/
+train_file: data/new_silda/train.txt
+val_file: data/new_silda/val.txt
+test_file: data/new_silda/test.txt
+
+va_downsample_start: 4
+kernel_size: 3
+load_edges: False                     # Load Canny edge image
+loader: 
+grayscale: False
+no_gt : False                         # Tell loaders to avoid loading GT data, since they may not be included in all datasets.
+do_resize: True
+do_polar_mapping: True
+input_height: 400                    # network input height choose from the above options
+input_width: 400                     # network input width choose from the above options
+polar_width: 400
+output_directory: output/new_silda/ # Path to save images, model weights of training
+task: calib_full                            # [det, calib, calib-full, joint]
+
+eval_method: var
+
+################################
+# -- MODEL CONFIGS --
+################################
+# choices:                      [fconv_adaptive_polar, fconv_gap_polar, 
+#                                 resize_gap_polar, resize_gap_polar_huber, resize_gap_polar_mae,
+#                                 resize_2step_polar]
+
+model_name: swig_v1          # Writers will be written based on the model name
+description: 'Calib only, full-train, without pre-trained weights, With batch normalization on 
+calib FE'
+
+################################
+# -- NETWORK --
+################################
+network_fe_layers: 3              # Number of layers of the feature extractor
+network_fc_layers: 3              # Number of layers of the fully connected head
+
+#############################
+# -- TRAIN OPTIONS --
+#############################
+batch_size: 32                # training size of the model
+num_workers: 3                # Data loader workers
+epochs: 100                    # number of epochs
+learning_rate: 0.0001         # learning rate of the model
+scheduler_patience: 5
+scheduler_factor: 0.5
+scheduler_min_lr : 1e-5
+
+  ### -- Early stopping --
+do_early_stopping: True
+patience : 8                  # Number of epochs to wait for a better value
+min_delta : 1e-5              # Slight differences in validation loss are not considered significant
+starting_epoch : 10           # Epoch that defines the start of Early stopping.
+
+  ### -- LOSSES --
+reference_train_metric: varcal_loss
+reference_val_metric: varcal_loss_val
+loss_huber_delta: 0.3
+loss_weightedvar_beta: 0
+
+################
+# -- WEIGHTS --
+################
+train_va_weights: False
+test_va_weights: False
+
+#############################
+# -- LOGGING OPTIONS --
+#############################
+log_frequency: 50            # number of batches between each tensorboard log
+
+#############################
+# -- TEST OPTIONS --
+#############################
+# Path to save tensorboard events. If empty is the same as pretrained weights.
+test_suff: (VAR)
+test_save_rectified_imgs: False
+test_save_calibration_params: False
+test_visualize_batch_details: True
+test_metrics_df_path: # 'benchmark/calibration/gen_woodscape_fr/metrics/evaluation.csv' # Path to the dataframe containing the metrics. If it does not exist it is created.
+test_img_out_path: 'benchmark/calibration/new_silda/images/'
+test_param_out_path: 'benchmark/calibration/new_silda/params/'
+test_img_out_height: 300
+test_img_out_width: 300
+
+###########################
+# -- PRE_TRAINED CONFIG --
+###########################
+# Pre-trained weights folder path of trained models to resume training and for testing
+pretrained_weights: 
+
+epoch_to_load:               # Number of the epoch to load if multiple options are availble. Empty is the last epoch
+models_to_load: ["net"]
+discard_param_group: [] 
+freeze_encoder: True
+optimizer:
+
+####################################################
+# -- CUDA --
+#############################
+device: 'cuda:0'             # choose cpu or cuda:0 device
+cuda_visible_devices: "0"    # To forcefully run the model on CPU set -1 else set string value to 0
+use_multiple_gpu: False      # Data parallelism
+########################################################################################################################
